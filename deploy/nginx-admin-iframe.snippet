@@ -1,0 +1,36 @@
+# ERPNext — allow IntelliVerse admin hub to embed erp.toba-tech.ai in an iframe.
+#
+# Problem: bench / ingress nginx adds `X-Frame-Options: SAMEORIGIN`, which blocks
+# cross-origin iframes even when erpnext's Python after_request hook strips it.
+#
+# Apply ONE of the options below.
+
+# ── Option A: Kubernetes ingress (nginx ingress controller) ─────────────────
+#
+#   nginx.ingress.kubernetes.io/configuration-snippet: |
+#     proxy_hide_header X-Frame-Options;
+#     add_header Content-Security-Policy "frame-ancestors 'self' https://admin.intelli-verse-x.ai https://admin.toba-tech.ai http://localhost:3000" always;
+#
+# If your cluster has headers-more-nginx-module:
+#
+#   nginx.ingress.kubernetes.io/configuration-snippet: |
+#     more_clear_headers 'X-Frame-Options';
+#     add_header Content-Security-Policy "frame-ancestors 'self' https://admin.intelli-verse-x.ai https://admin.toba-tech.ai http://localhost:3000" always;
+
+# ── Option B: bench nginx site config ───────────────────────────────────────
+#
+# In /etc/nginx/conf.d/<site>.conf (or the bench-generated site block),
+# REPLACE:
+#
+#   add_header X-Frame-Options "SAMEORIGIN";
+#
+# WITH:
+#
+add_header Content-Security-Policy "frame-ancestors 'self' https://admin.intelli-verse-x.ai https://admin.toba-tech.ai http://localhost:3000" always;
+
+# Do NOT set X-Frame-Options when using frame-ancestors (browsers prefer CSP).
+
+# ── Verify ──────────────────────────────────────────────────────────────────
+#   curl -sI https://erp.toba-tech.ai | grep -iE 'x-frame|content-security'
+#
+# Expected: no X-Frame-Options; CSP includes admin.intelli-verse-x.ai
