@@ -19,4 +19,3 @@ node_modules/
 .backportrc.json
 # Aider AI Chat
 .aider*
-config.bat
